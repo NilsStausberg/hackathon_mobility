@@ -3,6 +3,19 @@ import numpy as np
 import re
 import datetime
 
+def loadData(timestemp=True):
+    df = pd.read_csv("./Data_prep3.csv", delimiter=",")
+    df = df.fillna(0)
+
+    add_datepart(df, "Timestamp", drop=False, time=False)
+
+    df = df.drop(["Unnamed: 0","TimestampElapsed"], axis=1);
+    if timestemp is False:
+        df = df.drop(["Timestamp"], axis=1);
+
+    return df
+
+
 # https://en.wikipedia.org/wiki/Haversine_formula
 def distFrom(lat1, lng1, lat2, lng2):
     earthRadius = 6371000 #meters
@@ -26,8 +39,7 @@ def drop_loops_far_away(df, max_dist=3000, latSensor = 50.12565556, lonSensor = 
         Returns:
             df_nearest_loops - data frame that only contains the nearest loops
     """
-    col_to_drop = [df.columns[i] for i in range(1,720) if
-              (compute_dist_to_Sensor(df.columns[i], latSensor, lonSensor) > max_dist)]
+    col_to_drop = [df.columns[i] for i in range(1,df.columns.get_loc("Stickstoffmonoxid (NO)[µg/m³]")) if (compute_dist_to_Sensor(df.columns[i], latSensor, lonSensor) > max_dist)]
     df_nearest_loops = df.drop(col_to_drop, axis=1)
     return df_nearest_loops
 
@@ -40,12 +52,13 @@ def reduce_cars_in_distance(df, percetage = 1, dist=100, lat = 50.12565556, lon 
         Returns:
             df_nearest_loops - data frame that only contains the nearest loops
     """
-    print(df.columns)
-    col_to_reduce = [df.columns[i] for i in range(1,696) if (compute_dist_to_Sensor(df.columns[i], lat, lon) < dist)]
+    dfTEMP = df.copy()
+    col_to_reduce = [dfTEMP.columns[i] for i in range(1,dfTEMP.columns.get_loc("Stickstoffmonoxid (NO)[µg/m³]")) if (compute_dist_to_Sensor(dfTEMP.columns[i], lat, lon) < dist)]
     for column in col_to_reduce:
-        df[column] = df[column].multiply(percetage)
+        #print("Reduce loop with ID %s" % column)
+        dfTEMP[column] = dfTEMP[column].multiply(percetage)
 
-    return df
+    return dfTEMP
 
 def select_day(df, month="09", day="30"):
     df["Timestamp"] = pd.to_datetime(df["Timestamp"])

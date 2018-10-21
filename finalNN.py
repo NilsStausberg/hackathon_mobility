@@ -127,17 +127,20 @@ class NN():
         print("Plot prediction and target")
         plt.figure()
         plt.plot(test_labels, label="Target")
+        plt.xlabel("Index")
+        plt.ylabel("Stickstoffmonoxid (NO)[$\mu g / m^3$")
         plt.plot(test_predictions, label="Prediction")
         plt.legend()
 
         print("Plot error")
-       # plt.figure()
-        error = test_predictions - test_labels
-        print(test_predictions.shape)
-        print(test_labels.shape)
-       # plt.hist(error, bins = 50)
-       # plt.xlabel("Prediction Error")
-       # plt.ylabel("Count")
+        plt.figure()
+        error = []
+        for i in range(len(test_predictions)):
+            error.append(test_predictions[i] - test_labels[i][0])
+
+        plt.hist(error, bins = 50)
+        plt.xlabel("Prediction Error / $\mu g / m^3$")
+        plt.ylabel("Count")
 
         plt.show()
 
@@ -152,6 +155,12 @@ class NN():
         return loaded_model
 
     def predict(self, data):
-        predictions = self.model.predict(data).flatten()
+        data = data.drop(["Stickstoffdioxid (NO2)[µg/m³]","Stickstoffmonoxid (NO)[µg/m³]"], axis=1);
+        if "Timestamp" in data:
+            data = data.drop("Timestamp", axis=1);
+
+        npFeatures = data.values
+
+        predictions = self.model.predict(npFeatures).flatten()
 
         return predictions
