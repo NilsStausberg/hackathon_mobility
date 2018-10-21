@@ -7,3 +7,4 @@ Data*
 Target*
 modelNN.json
 modelNN.h5
+*.png
