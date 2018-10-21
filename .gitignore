@@ -2,4 +2,7 @@ env/
 Mobility/
 .ipynb_checkpoints/
 __pycache__/
-.DS_Store
+Data*
+Target*
+modelNN.json
+modelNN.h5
