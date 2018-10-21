@@ -1,3 +1,7 @@
+import pandas as pd
+import numpy as np
+import datetime
+
 # https://en.wikipedia.org/wiki/Haversine_formula
 def distFrom(lat1, lng1, lat2, lng2):
     earthRadius = 6371000 #meters
@@ -11,8 +15,7 @@ def distFrom(lat1, lng1, lat2, lng2):
 
 def compute_dist_to_Sensor(point, sensor_lat, sensor_lon):
     dfLocation = pd.read_csv('Mobility/dfLocation.csv', sep="\t", index_col='ElemUID')
-    return distFrom(dfLocation.loc[point].Lat, dfLocation.loc[point].Lon
-                    , sensor_lat, sensor_lon)
+    return distFrom(dfLocation.loc[int(point)].Lat, dfLocation.loc[int(point)].Lon, sensor_lat, sensor_lon)
 
 def drop_loops_far_away(df, max_dist=3000, latSensor = 50.12565556, lonSensor = 8.69305556):
     """
@@ -36,8 +39,21 @@ def reduce_cars_in_distance(df, percetage = 1, dist=100, lat = 50.12565556, lon 
         Returns:
             df_nearest_loops - data frame that only contains the nearest loops
     """
-    col_to_reduce = [df.columns[i] for i in range(1,720) if (compute_dist_to_Sensor(df.columns[i], lat, lon) < dist)]
+    print(df.columns)
+    col_to_reduce = [df.columns[i] for i in range(1,697) if (compute_dist_to_Sensor(df.columns[i], lat, lon) < dist)]
     for column in col_to_reduce:
+        print(column)
         df[column] = df[column].multiply(percetage)
 
     return df
+
+def select_day(df, month="09", day="30"):
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+
+    dateStart = "2018-"+month+"-"+day+" 00:30:00"
+    dateEnd = "2018-"+month+"-"+day+" 23:30:00"
+
+    index_min = df[df["Timestamp"] == datetime.datetime.strptime(dateStart, "%Y-%m-%d %H:%M:%S")].index.values[0]
+    index_max = df[df["Timestamp"] == datetime.datetime.strptime(dateEnd, "%Y-%m-%d %H:%M:%S")].index.values[0] + 1
+
+    return df[index_min:index_max]
