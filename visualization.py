@@ -79,7 +79,7 @@ def plotLocation(df, df2 = None):
     plt.show()
 
 def plotReducedLoops(data, R, coordinates):
-    file = "Mobility/dfLocation.csv"
+    file = "./data/dfLocation.csv"
     dfLocation = pd.read_csv(file, delimiter="\t")
 
     dfDropedLoops = drop_loops_far_away(data, R, coordinates[0], coordinates[1])

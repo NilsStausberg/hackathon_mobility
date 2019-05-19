@@ -28,7 +28,7 @@ def distFrom(lat1, lng1, lat2, lng2):
     return dist
 
 def compute_dist_to_Sensor(point, sensor_lat, sensor_lon):
-    dfLocation = pd.read_csv('Mobility/dfLocation.csv', sep="\t", index_col='ElemUID')
+    dfLocation = pd.read_csv('./data/dfLocation.csv', sep="\t", index_col='ElemUID')
     return distFrom(dfLocation.loc[int(point)].Lat, dfLocation.loc[int(point)].Lon, sensor_lat, sensor_lon)
 
 def drop_loops_far_away(df, max_dist=3000, latSensor = 50.12565556, lonSensor = 8.69305556):

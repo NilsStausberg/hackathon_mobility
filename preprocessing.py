@@ -16,7 +16,7 @@ pathDynamicData = "Mobility/dynamische_Verkehrsdaten/"
 
 
 # ## Dynamic countrates
-# As a first step, preprocess the dynamic data by loading an additional xml-file to identify the location corresponding to the induction loops. Further a new data frame is created, containing the latitude, longitude for each cole. 
+# As a first step, preprocess the dynamic data by loading an additional xml-file to identify the location corresponding to the induction loops. Further a new data frame is created, containing the latitude, longitude for each cole.
 
 # In[2]:
 
@@ -25,10 +25,10 @@ def prepareDynData(pathAndFilename,
                    pathToXML=f"{pathDynamicData}Statische_Detektordaten.xml"):
     """
     Read and preprocess data from dynamic countrates.
-        Input: 
+        Input:
             pathAndFilename - Path to file containing the data
             pathToXML - Path to xml file
-        Returns: 
+        Returns:
             df_filtered - data frame of the filtered data
             dfLocation - data frame of the filtered data (ID as index)
     """
@@ -41,7 +41,7 @@ def prepareDynData(pathAndFilename,
     xmlTree = ET.parse(pathToXML)
     root = xmlTree.getroot()
 
-    # Get from records the identification ID and map these to location 
+    # Get from records the identification ID and map these to location
     IDList = []
     lat = {}
     lon = {}
@@ -66,15 +66,15 @@ def prepareDynData(pathAndFilename,
     dfLocation = pd.DataFrame()
     dfLocation["ElemUID"] = df["ElemUID"]
     dfLocation = dfLocation.drop_duplicates("ElemUID")
-    
+
     dfLocation["Lat"] = dfLocation["ElemUID"]
     dfLocation["Lon"] = dfLocation["ElemUID"]
-    
+
     dfLocation.set_index("ElemUID", inplace=True)
-  
+
     dfLocation = dfLocation.replace({"Lat": lat})
     dfLocation = dfLocation.replace({"Lon": lon})
-    
+
     return df, dfLocation
 
 
@@ -102,30 +102,30 @@ def get_amount_cars_per_30_min(df):
     """
     We only want a granularity of 30 minutes, because the air polution data
     is only given in this granularity.
-        Input: 
+        Input:
             df - data frame of the filtered data
-        Returns: 
+        Returns:
             df_amount_cars - data frame containing for each timestamp (granularity: 30 min)
                              the amount of cars at each induction loop, respectively
     """
-    
+
     df.ElemUID = pd.to_numeric(df.ElemUID, downcast='integer')
     # NaN corresponds to 0 count rates
     df.Number = pd.to_numeric(df.Number).fillna(0).astype(int)
-    
+
     # Number of cars is given in cars/hour. We want to have cars/period.
     df['Period'] = df['DaySecTo(UTC)'] - df['DaySecFrom(UTC)']
-    df.Period = (df.Period.dt.seconds / 60).astype(int)    
+    df.Period = (df.Period.dt.seconds / 60).astype(int)
     df.Number = (df.Number * df.Period / 60).astype(int)
-    
+
     # Add 1 hour, because date in UTC+0 and air polution data is in MEZ.
     # TODO: summer/winter time
     df['Timestamp'] = df['DaySecTo(UTC)'] + datetime.timedelta(hours=1)
     df = df.drop(['ElemName', 'Kind', 'DaySecFrom(UTC)', 'DaySecTo(UTC)', 'Period'], axis=1)
-        
-    df.Timestamp = df.Timestamp.apply(lambda dt: round_up_date_to_half_hours(dt))    
+
+    df.Timestamp = df.Timestamp.apply(lambda dt: round_up_date_to_half_hours(dt))
     df = df.groupby(['ElemUID', 'Timestamp'])['Number'].sum().reset_index(name = 'Total_Cars')
-    
+
     return df.pivot(index='Timestamp', columns='ElemUID', values='Total_Cars')
 
 
